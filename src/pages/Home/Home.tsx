@@ -1,30 +1,61 @@
 import React, { useState } from 'react';
-import { Box, Typography, Grid, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Grid,
+  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  Button,
+} from '@mui/material';
+import { AddCircle } from '@mui/icons-material';
+import { useSelector, useDispatch } from 'react-redux';
 import Post from '../../components/Post/Post';
 import { mockPosts } from '../../utils/mockData';
-import { AddCircle } from '@mui/icons-material';
+import { addComment } from '../../features/comments/commentsSlice';
+
+interface PostData {
+  id: number;
+  title: string;
+  content: string;
+  author: string;
+  imageURL: string;
+}
+
+interface CommentData {
+  id: number;
+  postId: number;
+  body: string;
+  author: string;
+  parentId?: number;
+}
 
 const Home: React.FC = () => {
-  const [posts, setPosts] = useState(mockPosts);
-  const [comments, setComments] = useState([]);
+  const [posts, setPosts] = useState<PostData[]>(mockPosts);
   const [activePostId, setActivePostId] = useState<number | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [newPost, setNewPost] = useState({
+  const [newPost, setNewPost] = useState<PostData>({
     title: '',
     content: '',
     author: 'User',
     imageURL: '',
   });
 
+  const dispatch = useDispatch();
+  const comments = useSelector((state: any) => state.comments.comments); // Access comments from Redux
+
   const handlePostComment = (postId: number, body: string, parentId?: number) => {
-    const newComment = {
+    const newComment: CommentData = {
       id: comments.length + 1,
       postId,
       body,
       author: 'User',
       parentId,
     };
-    setComments([...comments, newComment]);
+    dispatch(addComment(newComment)); // Use Redux to manage comments
   };
 
   const getCommentThreads = (postId: number) => {
@@ -88,7 +119,7 @@ const Home: React.FC = () => {
                     key={comment.id}
                     comment={comment}
                     isReply={false}
-                    onReplyClick={() => handlePostComment(post.id, "Replying to comment", comment.id)}
+                    onReplyClick={() => handlePostComment(post.id, 'Replying to comment', comment.id)}
                   />
                 ))}
               </Box>
@@ -145,11 +176,11 @@ const Home: React.FC = () => {
             required
           />
         </DialogContent>
-        <DialogActions sx={{justifyContent:"center", marginBottom:2}}>
-          <Button onClick={handleDialogClose} color="secondary" variant='contained'>
+        <DialogActions sx={{ justifyContent: 'center', marginBottom: 2 }}>
+          <Button onClick={handleDialogClose} color="secondary" variant="contained">
             Cancel
           </Button>
-          <Button onClick={handleSubmitPost} color="primary" variant='contained'>
+          <Button onClick={handleSubmitPost} color="primary" variant="contained">
             Post
           </Button>
         </DialogActions>
