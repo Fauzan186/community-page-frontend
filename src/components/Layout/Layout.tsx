@@ -1,15 +1,21 @@
-// src/components/Layout/Layout.tsx
-import React from 'react';
+import React, { ReactNode } from 'react';
+import { Container, Box } from '@mui/material';
 import Header from './Header';
 import Footer from './Footer';
 
-const Layout: React.FC = ({ children }) => {
+interface LayoutProps {
+  children: ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div>
+    <Container maxWidth={false} disableGutters>
       <Header />
-      <main>{children}</main>
+      <Box component="main" sx={{ minHeight: '80vh', py: 3 }}>
+        {children}
+      </Box>
       <Footer />
-    </div>
+    </Container>
   );
 };
 

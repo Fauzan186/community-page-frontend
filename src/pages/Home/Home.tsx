@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Grid,
   IconButton,
   Dialog,
   DialogActions,
@@ -12,10 +11,10 @@ import {
   Button,
 } from '@mui/material';
 import { AddCircle } from '@mui/icons-material';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import Post from '../../components/Post/Post';
 import { mockPosts } from '../../utils/mockData';
-import { addComment } from '../../features/comments/commentsSlice';
+
 
 interface PostData {
   id: number;
@@ -25,50 +24,18 @@ interface PostData {
   imageURL: string;
 }
 
-interface CommentData {
-  id: number;
-  postId: number;
-  body: string;
-  author: string;
-  parentId?: number;
-}
-
 const Home: React.FC = () => {
   const [posts, setPosts] = useState<PostData[]>(mockPosts);
   const [activePostId, setActivePostId] = useState<number | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [newPost, setNewPost] = useState<PostData>({
+  const [newPost, setNewPost] = useState<Omit<PostData, 'id'>>({
     title: '',
     content: '',
     author: 'User',
     imageURL: '',
   });
 
-  const dispatch = useDispatch();
-  const comments = useSelector((state: any) => state.comments.comments); // Access comments from Redux
-
-  const handlePostComment = (postId: number, body: string, parentId?: number) => {
-    const newComment: CommentData = {
-      id: comments.length + 1,
-      postId,
-      body,
-      author: 'User',
-      parentId,
-    };
-    dispatch(addComment(newComment)); // Use Redux to manage comments
-  };
-
-  const getCommentThreads = (postId: number) => {
-    const postComments = comments.filter(
-      (comment) => comment.postId === postId && !comment.parentId
-    );
-
-    return postComments.map((comment) => ({
-      ...comment,
-      replies: comments.filter((reply) => reply.parentId === comment.id),
-    }));
-  };
-
+  const comments = useSelector((state: any) => state.comments.comments);
   const handleDialogClose = () => {
     setOpenDialog(false);
     setNewPost({
@@ -90,7 +57,7 @@ const Home: React.FC = () => {
   const handleSubmitPost = () => {
     const updatedPosts = [
       ...posts,
-      { id: posts.length + 1, ...newPost, imageURL: newPost.imageURL || 'https://via.placeholder.com/150' },
+      { id: posts.length + 1, ...newPost, imageURL: newPost.imageURL || 'https://fastly.picsum.photos/id/60/1920/1200.jpg?hmac=fAMNjl4E_sG_WNUjdU39Kald5QAHQMh-_-TsIbbeDNI' },
     ];
     setPosts(updatedPosts);
     handleDialogClose();
@@ -98,37 +65,26 @@ const Home: React.FC = () => {
 
   return (
     <Box sx={{ padding: 3 }}>
-      <Typography variant="h4" gutterBottom textAlign="center" fontWeight={600}>
-        Community Posts
+      <Typography variant="h4" marginBottom={6} gutterBottom textAlign="center" fontWeight={600}>
+      Community Post List
       </Typography>
-      <Grid container spacing={2}>
+      <Box display="flex" flexWrap="wrap" gap={2} justifyContent="center">
         {posts.map((post) => (
-          <Grid item xs={12} md={4} key={post.id}>
+          <Box key={post.id} width={{ xs: '100%', md: '30%' }}>
             <Post
-              {...post}
-              commentCount={comments.filter((c) => c.postId === post.id).length}
-              onCommentClick={() =>
-                setActivePostId(activePostId === post.id ? null : post.id)
-              }
+              id={post.id}
+              title={post.title}
+              content={post.content}
+              author={post.author}
+              imageURL={post.imageURL}
+              commentCount={comments.filter((c:any) => c.postId === post.id).length}
+              onCommentClick={() => setActivePostId(activePostId === post.id ? null : post.id)}
               isActive={activePostId === post.id}
             />
-            {activePostId === post.id && (
-              <Box sx={{ marginTop: 2 }}>
-                {getCommentThreads(post.id).map((comment) => (
-                  <Comment
-                    key={comment.id}
-                    comment={comment}
-                    isReply={false}
-                    onReplyClick={() => handlePostComment(post.id, 'Replying to comment', comment.id)}
-                  />
-                ))}
-              </Box>
-            )}
-          </Grid>
+          </Box>
         ))}
-      </Grid>
+      </Box>
 
-      {/* Add New Post Button */}
       <IconButton
         color="primary"
         sx={{
@@ -143,7 +99,6 @@ const Home: React.FC = () => {
         <AddCircle fontSize="large" />
       </IconButton>
 
-      {/* New Post Dialog */}
       <Dialog open={openDialog} onClose={handleDialogClose}>
         <DialogTitle>Create New Post</DialogTitle>
         <DialogContent>
